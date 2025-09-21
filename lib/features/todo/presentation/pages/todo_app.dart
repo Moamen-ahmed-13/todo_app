@@ -20,7 +20,6 @@ class TodoApp extends StatefulWidget {
 
 class _TodoAppState extends State<TodoApp> {
   final TextEditingController _controller = TextEditingController();
-
   @override
   void dispose() {
     _controller.dispose();
@@ -32,6 +31,8 @@ class _TodoAppState extends State<TodoApp> {
     final cubit = context.read<TodoCubit>();
     final isDark = widget.isDarkMode;
 
+    final mainBlue = Colors.blue;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -42,8 +43,8 @@ class _TodoAppState extends State<TodoApp> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isDark
-                  ? [Colors.deepPurple.shade900, Colors.black]
-                  : [Colors.deepPurple, Colors.purpleAccent],
+                  ? [mainBlue.shade900, Colors.black]
+                  : [mainBlue.shade300, Colors.white],
             ),
           ),
         ),
@@ -56,7 +57,8 @@ class _TodoAppState extends State<TodoApp> {
             itemBuilder: (context) => const [
               PopupMenuItem(value: TaskFilter.all, child: Text('All')),
               PopupMenuItem(value: TaskFilter.pending, child: Text('Pending')),
-              PopupMenuItem(value: TaskFilter.completed, child: Text('Completed')),
+              PopupMenuItem(
+                  value: TaskFilter.completed, child: Text('Completed')),
             ],
             icon: const Icon(Icons.filter_list),
           ),
@@ -67,177 +69,275 @@ class _TodoAppState extends State<TodoApp> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                hintText: "Add a new task...",
-                filled: true,
-                fillColor: isDark ? Colors.grey[850] : Colors.grey[200],
-                prefixIcon: const Icon(Icons.edit_note),
-                suffixIcon: _controller.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => _controller.clear()),
-                        tooltip: 'Clear input',
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide.none,
+      body: Container(
+        color: isDark ? Colors.black : Colors.grey[100],
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  hintText: "Add a new task...",
+                  filled: true,
+                  fillColor: isDark ? Colors.grey[850] : Colors.grey[200],
+                  prefixIcon: Icon(Icons.edit_note, color: mainBlue),
+                  suffixIcon: _controller.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => setState(() => _controller.clear()),
+                          tooltip: 'Clear input',
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (value) {
+                  cubit.addTask(value);
+                  _controller.clear();
+                },
               ),
-              onChanged: (_) => setState(() {}),
-              onSubmitted: (value) {
-                cubit.addTask(value);
-                _controller.clear();
-              },
             ),
-          ),
-          Expanded(
-            child: BlocBuilder<TodoCubit, TodoState>(
+            BlocBuilder<TodoCubit, TodoState>(
               builder: (context, state) {
-                final tasks = cubit.filteredTasks;
-                if (tasks.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No tasks yet 🎉',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onBackground
-                            .withOpacity(0.6),
-                      ),
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    final originalIndex = state.tasks.indexOf(task);
-                    final isOverdue = task.date != null &&
-                        task.date!.isBefore(DateTime.now()) &&
-                        !task.isDone;
-
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey[900] : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: ListTile(
-                        leading: Checkbox(
-                          value: task.isDone,
-                          onChanged: (value) =>
-                              cubit.toggleDone(originalIndex, value ?? false),
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      FilterChip(
+                        shape: const StadiumBorder().copyWith(
+                            side: BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        )),
+                        checkmarkColor: mainBlue,
+                        backgroundColor: isDark ? mainBlue : Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        label: const Text("All"),
+                        selected: state.filter == TaskFilter.all,
+                        onSelected: (_) => context
+                            .read<TodoCubit>()
+                            .changeFilter(TaskFilter.all),
+                        selectedColor: mainBlue.withOpacity(0.3),
+                        labelStyle: TextStyle(
+                          color:
+                              state.filter == TaskFilter.all ? mainBlue : null,
                         ),
-                        title: Text(
-                          task.title,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            decoration: task.isDone
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
-                            color: task.isDone
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .onBackground
-                                    .withOpacity(0.5)
-                                : Theme.of(context).colorScheme.onBackground,
-                          ),
-                        ),
-                        subtitle: task.date != null
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.calendar_today,
-                                    size: 16,
-                                    color: isOverdue
-                                        ? Colors.redAccent
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onBackground
-                                            .withOpacity(0.6),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Container(
-                                    width: 125,
-                                    child: Text(
-                                      "Due: ${DateFormat.yMMMd().format(task.date!)}",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 13,
-                                        color: isOverdue
-                                            ? Colors.redAccent
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onBackground
-                                                .withOpacity(0.6),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : null,
-                        trailing: Wrap(
-                          spacing: 4,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit,
-                                  color: Colors.blueAccent),
-                              onPressed: () => _showEditDialog(
-                                  context, cubit, originalIndex, task.title),
-                              tooltip: 'Edit Task',
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete,
-                                  color: Colors.redAccent),
-                              onPressed: () => _showDeleteDialog(
-                                  context, cubit, originalIndex),
-                              tooltip: 'Delete Task',
-                            ),
-                          ],
-                        ),
-                        onTap: () async {
-                          final pickedDate = await showDatePicker(
-                            context: context,
-                            initialDate: task.date ?? DateTime.now(),
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                          );
-                          if (pickedDate != null) {
-                            cubit.updateDate(originalIndex, pickedDate);
-                          }
-                        },
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                        tileColor: isDark ? Colors.grey[900] : Colors.grey[100],
                       ),
-                    );
-                  },
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        shape: const StadiumBorder().copyWith(
+                            side: BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        )),
+                        checkmarkColor: mainBlue,
+                        label: const Text("Pending"),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        selected: state.filter == TaskFilter.pending,
+                        onSelected: (_) => context
+                            .read<TodoCubit>()
+                            .changeFilter(TaskFilter.pending),
+                        selectedColor: mainBlue.withOpacity(0.3),
+                        labelStyle: TextStyle(
+                          color: state.filter == TaskFilter.pending
+                              ? mainBlue
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        checkmarkColor: mainBlue,
+                        shape: const StadiumBorder().copyWith(
+                            side: BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        )),
+                        label: const Text("Completed"),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        selected: state.filter == TaskFilter.completed,
+                        onSelected: (_) => context
+                            .read<TodoCubit>()
+                            .changeFilter(TaskFilter.completed),
+                        selectedColor: mainBlue.withOpacity(0.3),
+                        labelStyle: TextStyle(
+                          color: state.filter == TaskFilter.completed
+                              ? mainBlue
+                              : null,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
-          ),
-        ],
+            Expanded(
+              child: BlocBuilder<TodoCubit, TodoState>(
+                builder: (context, state) {
+                  final tasks = cubit.filteredTasks;
+                  if (tasks.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No tasks yet 🎉',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onBackground
+                              .withOpacity(0.6),
+                        ),
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemCount: tasks.length,
+                    itemBuilder: (context, index) {
+                      final task = tasks[index];
+                      final originalIndex = state.tasks.indexOf(task);
+                      final isOverdue = task.date != null &&
+                          task.date!.isBefore(DateTime.now()) &&
+                          !task.isDone;
+
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[900] : Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ListTile(
+                          leading: Checkbox(
+                            activeColor: mainBlue,
+                            checkColor: Colors.white,
+                            shape: const CircleBorder(),
+                            value: task.isDone,
+                            onChanged: (value) =>
+                                cubit.toggleDone(originalIndex, value ?? false),
+                          ),
+                          title: Text(
+                            task.title,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              decoration: task.isDone
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                              color: task.isDone
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .onBackground
+                                      .withOpacity(0.5)
+                                  : Theme.of(context).colorScheme.onBackground,
+                            ),
+                          ),
+                          subtitle: task.date != null
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 16,
+                                      color: isOverdue
+                                          ? Colors.redAccent
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .onBackground
+                                              .withOpacity(0.6),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    SizedBox(
+                                      width: 125,
+                                      child: Text(
+                                        "Due: ${DateFormat.yMMMd().format(task.date!)}",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          color: isOverdue
+                                              ? Colors.redAccent
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onBackground
+                                                  .withOpacity(0.6),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                          trailing: Wrap(
+                            spacing: 4,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, color: mainBlue),
+                                onPressed: () => _showEditDialog(
+                                    context, cubit, originalIndex, task.title),
+                                tooltip: 'Edit Task',
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: Colors.redAccent),
+                                onPressed: () => _showDeleteDialog(
+                                    context, cubit, originalIndex),
+                                tooltip: 'Delete Task',
+                              ),
+                            ],
+                          ),
+                          onTap: () async {
+                            final pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: task.date ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                              builder: (context, child) {
+                                // Apply blue theme to date picker
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: ColorScheme.light(
+                                      primary: mainBlue,
+                                      onPrimary: Colors.white,
+                                      onSurface:
+                                          isDark ? Colors.white : Colors.black,
+                                    ),
+                                    dialogBackgroundColor: isDark
+                                        ? Colors.grey[900]
+                                        : Colors.white,
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (pickedDate != null) {
+                              cubit.updateDate(originalIndex, pickedDate);
+                            }
+                          },
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          tileColor:
+                              isDark ? Colors.grey[900] : Colors.grey[100],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -255,8 +355,7 @@ class _TodoAppState extends State<TodoApp> {
           _controller.clear();
         },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor:
-            isDark ? Colors.deepPurple.shade900 : Colors.deepPurple,
+        backgroundColor: mainBlue,
         tooltip: 'Add Task',
         child: const Icon(
           Icons.add,
@@ -293,6 +392,7 @@ class _TodoAppState extends State<TodoApp> {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
+              backgroundColor: Colors.blue.shade100,
             ),
             child: const Text('Save'),
             onPressed: () => Navigator.pop(context, controller.text.trim()),

@@ -9,21 +9,30 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 final sl = GetIt.instance;
 
-void setup() async {
-  await Hive.initFlutter();
-  Hive.registerAdapter(TaskAdapter());
-  final box = await Hive.openBox<Task>('tasksBox');
-  sl.registerSingleton<TodoRepository>(TodoRepository(box));
+Future<void> setup() async {
+  try {
+    await Hive.initFlutter();
+    Hive.registerAdapter(TaskAdapter());
+    final box = await Hive.openBox<Task>('tasksBox');
+    sl.registerSingleton<TodoRepository>(TodoRepository(box));
+  } catch (e, stackTrace) {
+    debugPrint('Hive error: $e, $stackTrace');
+    rethrow;
+  }
+}
+
+Future<void> closeHiveBoxes() async {
+  await Hive.close();
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final box = await Hive.openBox<Task>('tasksBox');
+  await setup();
+
+  final repo = sl<TodoRepository>();
   runApp(
     BlocProvider(
-      create: (context) => TodoCubit(
-        TodoRepository(box),
-      ),
+      create: (context) => TodoCubit(repo),
       child: const TheRoot(),
     ),
   );
@@ -46,6 +55,12 @@ class _TheRootState extends State<TheRoot> {
   }
 
   @override
+  void dispose() {
+    closeHiveBoxes();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: TodoApp(
@@ -53,7 +68,29 @@ class _TheRootState extends State<TheRoot> {
         onToggleTheme: toggleTheme,
       ),
       debugShowCheckedModeBanner: false,
-      theme: _isDarkMode ? ThemeData.dark() : ThemeData.light(),
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primaryColor: const Color(0xFF2196F3),
+        colorScheme: ColorScheme.light(
+          primary: const Color(0xFF2196F3),
+          secondary: const Color(0xFF64B5F6),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF2196F3),
+        ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primaryColor: const Color(0xFF0D47A1),
+        colorScheme: ColorScheme.dark(
+          primary: const Color(0xFF0D47A1),
+          secondary: const Color(0xFF1976D2),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF0D47A1),
+        ),
+      ),
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
     );
   }
 }
