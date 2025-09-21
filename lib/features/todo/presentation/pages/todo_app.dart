@@ -48,13 +48,15 @@ class _TodoAppState extends State<TodoApp> {
           ),
         ),
         actions: [
-          PopupMenuButton<String>(
+          PopupMenuButton<TaskFilter>(
             tooltip: 'Filter tasks',
-            onSelected: cubit.changeFilter,
+            onSelected: (TaskFilter filter) {
+              cubit.changeFilter(filter);
+            },
             itemBuilder: (context) => const [
-              PopupMenuItem(value: 'All', child: Text('All')),
-              PopupMenuItem(value: 'Pending', child: Text('Pending')),
-              PopupMenuItem(value: 'Completed', child: Text('Completed')),
+              PopupMenuItem(value: TaskFilter.all, child: Text('All')),
+              PopupMenuItem(value: TaskFilter.pending, child: Text('Pending')),
+              PopupMenuItem(value: TaskFilter.completed, child: Text('Completed')),
             ],
             icon: const Icon(Icons.filter_list),
           ),
