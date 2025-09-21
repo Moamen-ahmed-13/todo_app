@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:todo_app/features/todo/logic/todo_cubit.dart';
+import 'package:todo_app/features/todo/logic/cubit/todo_cubit.dart';
 
 class TodoApp extends StatefulWidget {
   final bool isDarkMode;

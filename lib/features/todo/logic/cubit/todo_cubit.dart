@@ -4,21 +4,24 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hive/hive.dart';
 import 'package:todo_app/features/todo/data/task_model.dart';
+import 'package:todo_app/features/todo/logic/todo_repo.dart';
 
 part 'todo_state.dart';
 
 class TodoCubit extends Cubit<TodoState> {
-  TodoCubit() : super(const TodoState()) {
+final TodoRepository todoRepository;
+
+  TodoCubit(this.todoRepository) : super(const TodoState()) {
     loadTasks();
   }
 
   Future<void> loadTasks() async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      final box = await Hive.openBox<Task>('tasksBox');
-      emit(state.copyWith(tasks: box.values.toList(), isLoading: false));
+      final tasks = await todoRepository.loadTasks();
+      emit(state.copyWith(tasks: tasks, isLoading: false));
     } catch (e) {
-      emit(state.copyWith(isLoading: false, error: 'Failed to load tasks'));
+      emit(state.copyWith(isLoading: false, error: 'Failed to load tasks: $e'));
     }
   }
 
