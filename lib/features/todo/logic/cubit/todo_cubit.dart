@@ -115,7 +115,7 @@ final TodoRepository todoRepository;
       case TaskFilter.pending:
         return tasks.where((e)=> !e.isDone).toList();
       default:
-        return tasks;    
+        return tasks;     
     }
 
 }
