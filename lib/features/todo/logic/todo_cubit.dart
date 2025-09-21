@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_app/features/todo/data/task_model.dart';
 
@@ -13,13 +14,10 @@ class TodoCubit extends Cubit<TodoState> {
   }
 
   Future<void> loadTasks() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? tasksString = prefs.getString('tasks');
-    if (tasksString != null) {
-      final List decoded = jsonDecode(tasksString);
-      final tasks = decoded.map((e) => Task.fromJson(e)).toList();
-      emit(state.copyWith(tasks: List<Task>.from(tasks)));
-    }
+    emit(state.copyWith(isLoading: true, error: null));
+    try {
+      final box = await Hive.openBox<Task>('tasksBox');
+    } catch (e) {}
   }
 
   Future<void> saveTasks() async {
@@ -65,7 +63,7 @@ class TodoCubit extends Cubit<TodoState> {
     saveTasks();
   }
 
-  void changeFilter(String filter) {
+  void changeFilter(TaskFilter filter) {
     emit(state.copyWith(filter: filter));
   }
 

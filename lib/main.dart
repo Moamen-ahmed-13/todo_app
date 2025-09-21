@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
+import 'package:todo_app/features/todo/data/task_model.dart';
 import 'package:todo_app/features/todo/logic/todo_cubit.dart';
 import 'package:todo_app/features/todo/presentation/pages/todo_app.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(TaskAdapter());
   runApp(
       BlocProvider(create: (context) => TodoCubit(), child: const TheRoot()));
 }
