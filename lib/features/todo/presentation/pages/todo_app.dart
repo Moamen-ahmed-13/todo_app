@@ -1,3 +1,442 @@
+// import 'package:flutter/material.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:intl/intl.dart';
+// import 'package:todo_app/features/todo/logic/cubit/todo_cubit.dart';
+
+// class TodoApp extends StatefulWidget {
+//   final bool isDarkMode;
+//   final VoidCallback onToggleTheme;
+
+//   const TodoApp({
+//     super.key,
+//     required this.isDarkMode,
+//     required this.onToggleTheme,
+//   });
+
+//   @override
+//   State<TodoApp> createState() => _TodoAppState();
+// }
+
+// class _TodoAppState extends State<TodoApp> {
+//   final TextEditingController _controller = TextEditingController();
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final cubit = context.read<TodoCubit>();
+//     final isDark = widget.isDarkMode;
+
+//     final mainBlue = Colors.blue;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(
+//           "My Tasks",
+//           style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+//         ),
+//         flexibleSpace: Container(
+//           decoration: BoxDecoration(
+//             gradient: LinearGradient(
+//               colors: isDark
+//                   ? [mainBlue.shade900, Colors.black]
+//                   : [mainBlue.shade300, Colors.white],
+//             ),
+//           ),
+//         ),
+//         actions: [
+//           PopupMenuButton<TaskFilter>(
+//             tooltip: 'Filter tasks',
+//             onSelected: (TaskFilter filter) {
+//               cubit.changeFilter(filter);
+//             },
+//             itemBuilder: (context) => const [
+//               PopupMenuItem(value: TaskFilter.all, child: Text('All')),
+//               PopupMenuItem(value: TaskFilter.pending, child: Text('Pending')),
+//               PopupMenuItem(
+//                   value: TaskFilter.completed, child: Text('Completed')),
+//             ],
+//             icon: const Icon(Icons.filter_list),
+//           ),
+//           IconButton(
+//             tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+//             onPressed: widget.onToggleTheme,
+//             icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+//           ),
+//         ],
+//       ),
+//       body: Container(
+//         color: isDark ? Colors.black : Colors.grey[100],
+//         child: Column(
+//           children: [
+//             Padding(
+//               padding: const EdgeInsets.all(16),
+//               child: TextField(
+//                 controller: _controller,
+//                 decoration: InputDecoration(
+//                   hintText: "Add a new task...",
+//                   filled: true,
+//                   fillColor: isDark ? Colors.grey[850] : Colors.grey[200],
+//                   prefixIcon: Icon(Icons.edit_note, color: mainBlue),
+//                   suffixIcon: _controller.text.isNotEmpty
+//                       ? IconButton(
+//                           icon: const Icon(Icons.clear),
+//                           onPressed: () => setState(() => _controller.clear()),
+//                           tooltip: 'Clear input',
+//                         )
+//                       : null,
+//                   border: OutlineInputBorder(
+//                     borderRadius: BorderRadius.circular(14),
+//                     borderSide: BorderSide.none,
+//                   ),
+//                 ),
+//                 onChanged: (_) => setState(() {}),
+//                 onSubmitted: (value) {
+//                   cubit.addTask(value);
+//                   _controller.clear();
+//                 },
+//               ),
+//             ),
+//             BlocBuilder<TodoCubit, TodoState>(
+//               builder: (context, state) {
+//                 return Padding(
+//                   padding:
+//                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//                   child: Row(
+//                     mainAxisAlignment: MainAxisAlignment.start,
+//                     children: [
+//                       FilterChip(
+//                         shape: const StadiumBorder().copyWith(
+//                             side: BorderSide(
+//                           color: Colors.grey,
+//                           width: 1,
+//                         )),
+//                         checkmarkColor: mainBlue,
+//                         backgroundColor: isDark ? mainBlue : Colors.white,
+//                         padding: const EdgeInsets.symmetric(horizontal: 12),
+//                         label: const Text("All"),
+//                         selected: state.filter == TaskFilter.all,
+//                         onSelected: (_) => context
+//                             .read<TodoCubit>()
+//                             .changeFilter(TaskFilter.all),
+//                         selectedColor: mainBlue.withOpacity(0.3),
+//                         labelStyle: TextStyle(
+//                           color:
+//                               state.filter == TaskFilter.all ? mainBlue : null,
+//                         ),
+//                       ),
+//                       const SizedBox(width: 8),
+//                       FilterChip(
+//                         shape: const StadiumBorder().copyWith(
+//                             side: BorderSide(
+//                           color: Colors.grey,
+//                           width: 1,
+//                         )),
+//                         checkmarkColor: mainBlue,
+//                         label: const Text("Pending"),
+//                         padding: const EdgeInsets.symmetric(horizontal: 12),
+//                         selected: state.filter == TaskFilter.pending,
+//                         onSelected: (_) => context
+//                             .read<TodoCubit>()
+//                             .changeFilter(TaskFilter.pending),
+//                         selectedColor: mainBlue.withOpacity(0.3),
+//                         labelStyle: TextStyle(
+//                           color: state.filter == TaskFilter.pending
+//                               ? mainBlue
+//                               : null,
+//                         ),
+//                       ),
+//                       const SizedBox(width: 8),
+//                       FilterChip(
+//                         checkmarkColor: mainBlue,
+//                         shape: const StadiumBorder().copyWith(
+//                             side: BorderSide(
+//                           color: Colors.grey,
+//                           width: 1,
+//                         )),
+//                         label: const Text("Completed"),
+//                         padding: const EdgeInsets.symmetric(horizontal: 12),
+//                         selected: state.filter == TaskFilter.completed,
+//                         onSelected: (_) => context
+//                             .read<TodoCubit>()
+//                             .changeFilter(TaskFilter.completed),
+//                         selectedColor: mainBlue.withOpacity(0.3),
+//                         labelStyle: TextStyle(
+//                           color: state.filter == TaskFilter.completed
+//                               ? mainBlue
+//                               : null,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             ),
+//             Expanded(
+//               child: BlocBuilder<TodoCubit, TodoState>(
+//                 builder: (context, state) {
+//                   final tasks = cubit.filteredTasks;
+//                   if (tasks.isEmpty) {
+//                     return Center(
+//                       child: Text(
+//                         'No tasks yet 🎉',
+//                         style: GoogleFonts.poppins(
+//                           fontSize: 16,
+//                           color: Theme.of(context)
+//                               .colorScheme
+//                               .onBackground
+//                               .withOpacity(0.6),
+//                         ),
+//                       ),
+//                     );
+//                   }
+//                   return ListView.builder(
+//                     padding: const EdgeInsets.symmetric(horizontal: 12),
+//                     itemCount: tasks.length,
+//                     itemBuilder: (context, index) {
+//                       final task = tasks[index];
+//                       final originalIndex = state.tasks.indexOf(task);
+//                       final isOverdue = task.date != null &&
+//                           task.date!.isBefore(DateTime.now()) &&
+//                           !task.isDone;
+
+//                       return AnimatedContainer(
+//                         duration: const Duration(milliseconds: 300),
+//                         curve: Curves.easeInOut,
+//                         margin: const EdgeInsets.symmetric(vertical: 6),
+//                         decoration: BoxDecoration(
+//                           color: isDark ? Colors.grey[900] : Colors.white,
+//                           borderRadius: BorderRadius.circular(14),
+//                           boxShadow: [
+//                             BoxShadow(
+//                               color: Colors.black.withOpacity(0.05),
+//                               blurRadius: 6,
+//                               offset: const Offset(0, 3),
+//                             ),
+//                           ],
+//                         ),
+//                         child: ListTile(
+//                           leading: Checkbox(
+//                             activeColor: mainBlue,
+//                             checkColor: Colors.white,
+//                             shape: const CircleBorder(),
+//                             value: task.isDone,
+//                             onChanged: (value) =>
+//                                 cubit.toggleDone(originalIndex, value ?? false),
+//                           ),
+//                           title: Text(
+//                             task.title,
+//                             style: GoogleFonts.poppins(
+//                               fontSize: 16,
+//                               fontWeight: FontWeight.w500,
+//                               decoration: task.isDone
+//                                   ? TextDecoration.lineThrough
+//                                   : TextDecoration.none,
+//                               color: task.isDone
+//                                   ? Theme.of(context)
+//                                       .colorScheme
+//                                       .onBackground
+//                                       .withOpacity(0.5)
+//                                   : Theme.of(context).colorScheme.onBackground,
+//                             ),
+//                           ),
+//                           subtitle: task.date != null
+//                               ? Row(
+//                                   mainAxisSize: MainAxisSize.min,
+//                                   children: [
+//                                     Icon(
+//                                       Icons.calendar_today,
+//                                       size: 16,
+//                                       color: isOverdue
+//                                           ? Colors.redAccent
+//                                           : Theme.of(context)
+//                                               .colorScheme
+//                                               .onBackground
+//                                               .withOpacity(0.6),
+//                                     ),
+//                                     const SizedBox(width: 4),
+//                                     SizedBox(
+//                                       width: 125,
+//                                       child: Text(
+//                                         "Due: ${DateFormat.yMMMd().format(task.date!)}",
+//                                         style: GoogleFonts.poppins(
+//                                           fontSize: 13,
+//                                           color: isOverdue
+//                                               ? Colors.redAccent
+//                                               : Theme.of(context)
+//                                                   .colorScheme
+//                                                   .onBackground
+//                                                   .withOpacity(0.6),
+//                                         ),
+//                                       ),
+//                                     ),
+//                                   ],
+//                                 )
+//                               : null,
+//                           trailing: Wrap(
+//                             spacing: 4,
+//                             children: [
+//                               IconButton(
+//                                 icon: Icon(Icons.edit, color: mainBlue),
+//                                 onPressed: () => _showEditDialog(
+//                                     context, cubit, originalIndex, task.title),
+//                                 tooltip: 'Edit Task',
+//                               ),
+//                               IconButton(
+//                                 icon: const Icon(Icons.delete,
+//                                     color: Colors.redAccent),
+//                                 onPressed: () => _showDeleteDialog(
+//                                     context, cubit, originalIndex),
+//                                 tooltip: 'Delete Task',
+//                               ),
+//                             ],
+//                           ),
+//                           onTap: () async {
+//                             final pickedDate = await showDatePicker(
+//                               context: context,
+//                               initialDate: task.date ?? DateTime.now(),
+//                               firstDate: DateTime(2000),
+//                               lastDate: DateTime(2100),
+//                               builder: (context, child) {
+//                                 // Apply blue theme to date picker
+//                                 return Theme(
+//                                   data: Theme.of(context).copyWith(
+//                                     colorScheme: ColorScheme.light(
+//                                       primary: mainBlue,
+//                                       onPrimary: Colors.white,
+//                                       onSurface:
+//                                           isDark ? Colors.white : Colors.black,
+//                                     ),
+//                                     dialogBackgroundColor: isDark
+//                                         ? Colors.grey[900]
+//                                         : Colors.white,
+//                                   ),
+//                                   child: child!,
+//                                 );
+//                               },
+//                             );
+//                             if (pickedDate != null) {
+//                               cubit.updateDate(originalIndex, pickedDate);
+//                             }
+//                           },
+//                           contentPadding: const EdgeInsets.symmetric(
+//                               horizontal: 16, vertical: 8),
+//                           shape: RoundedRectangleBorder(
+//                               borderRadius: BorderRadius.circular(14)),
+//                           tileColor:
+//                               isDark ? Colors.grey[900] : Colors.grey[100],
+//                         ),
+//                       );
+//                     },
+//                   );
+//                 },
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () {
+//           final text = _controller.text.trim();
+//           if (text.isEmpty) {
+//             ScaffoldMessenger.of(context).showSnackBar(
+//               const SnackBar(
+//                 content: Text('Please enter a task'),
+//                 duration: Duration(seconds: 2),
+//               ),
+//             );
+//             return;
+//           }
+//           cubit.addTask(text);
+//           _controller.clear();
+//         },
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+//         backgroundColor: mainBlue,
+//         tooltip: 'Add Task',
+//         child: const Icon(
+//           Icons.add,
+//           size: 28,
+//           color: Colors.white,
+//         ),
+//       ),
+//     );
+//   }
+
+//   Future<void> _showEditDialog(BuildContext context, TodoCubit cubit, int index,
+//       String currentTitle) async {
+//     final controller = TextEditingController(text: currentTitle);
+//     final newName = await showDialog<String>(
+//       context: context,
+//       builder: (context) => AlertDialog(
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+//         title: const Text('Edit Task'),
+//         content: TextField(
+//           controller: controller,
+//           decoration: const InputDecoration(
+//             hintText: 'Enter new task name',
+//             border: OutlineInputBorder(),
+//           ),
+//           autofocus: true,
+//           onSubmitted: (value) => Navigator.pop(context, value.trim()),
+//         ),
+//         actions: [
+//           TextButton(
+//             child: const Text('Cancel'),
+//             onPressed: () => Navigator.pop(context),
+//           ),
+//           ElevatedButton(
+//             style: ElevatedButton.styleFrom(
+//               shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(10)),
+//               backgroundColor: Colors.blue.shade100,
+//             ),
+//             child: const Text('Save'),
+//             onPressed: () => Navigator.pop(context, controller.text.trim()),
+//           ),
+//         ],
+//       ),
+//     );
+
+//     if (newName != null && newName.isNotEmpty) {
+//       cubit.editTask(index, newName);
+//     }
+//   }
+
+//   Future<void> _showDeleteDialog(
+//       BuildContext context, TodoCubit cubit, int index) async {
+//     final confirm = await showDialog<bool>(
+//       context: context,
+//       builder: (context) => AlertDialog(
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+//         title: const Text('Delete Task?'),
+//         content: const Text('This action cannot be undone.'),
+//         actions: [
+//           TextButton(
+//             child: const Text('Cancel'),
+//             onPressed: () => Navigator.pop(context, false),
+//           ),
+//           ElevatedButton(
+//             style: ElevatedButton.styleFrom(
+//               backgroundColor: Colors.red,
+//               shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(10)),
+//             ),
+//             child: const Text('Delete', style: TextStyle(color: Colors.white)),
+//             onPressed: () => Navigator.pop(context, true),
+//           ),
+//         ],
+//       ),
+//     );
+
+//     if (confirm == true) {
+//       cubit.deleteTask(index);
+//     }
+//   }
+// }
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,18 +459,81 @@ class TodoApp extends StatefulWidget {
 
 class _TodoAppState extends State<TodoApp> {
   final TextEditingController _controller = TextEditingController();
+  final Color mainBlue = Colors.blue;
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  // Color and style helpers to reduce repetition
+  List<Color> _getGradientColors() {
+    return widget.isDarkMode
+        ? [Colors.blue.shade900, Colors.black]
+        : [Colors.blue.shade300, Colors.white];
+  }
+
+  Color _getTaskTileColor() {
+    return widget.isDarkMode ? Colors.grey[900]! : Colors.white;
+  }
+
+  Color _getInputFillColor() {
+    return widget.isDarkMode ? Colors.grey[850]! : Colors.grey[200]!;
+  }
+
+  Color _getBodyBackgroundColor() {
+    return widget.isDarkMode ? Colors.black : Colors.grey[100]!;
+  }
+
+  TextStyle _titleStyle(Color onBackgroundColor, bool isDone) {
+    return GoogleFonts.poppins(
+      fontSize: 16,
+      fontWeight: FontWeight.w500,
+      decoration: isDone ? TextDecoration.lineThrough : TextDecoration.none,
+      color: isDone ? onBackgroundColor.withOpacity(0.5) : onBackgroundColor,
+    );
+  }
+
+  TextStyle _subtitleStyle(Color onBackgroundColor, bool isOverdue) {
+    return GoogleFonts.poppins(
+      fontSize: 13,
+      color: isOverdue ? Colors.redAccent : onBackgroundColor.withOpacity(0.6),
+    );
+  }
+
+  TextStyle _emptyStateStyle(Color onBackgroundColor) {
+    return GoogleFonts.poppins(
+      fontSize: 16,
+      color: onBackgroundColor.withOpacity(0.6),
+    );
+  }
+
+  // Helper to build FilterChip (eliminates duplication across 3 chips)
+  Widget _buildFilterChip(TaskFilter filter, String label, bool isSelected) {
+    return FilterChip(
+      shape: const StadiumBorder().copyWith(
+        side: const BorderSide(color: Colors.grey, width: 1),
+      ),
+      checkmarkColor: mainBlue,
+      backgroundColor: isSelected
+          ? mainBlue.withOpacity(0.3)
+          : (widget.isDarkMode ? Colors.grey[800] : Colors.white),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => context.read<TodoCubit>().changeFilter(filter),
+      selectedColor: mainBlue.withOpacity(0.3),
+      labelStyle: TextStyle(
+        color: isSelected ? mainBlue : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TodoCubit>();
     final isDark = widget.isDarkMode;
-
-    final mainBlue = Colors.blue;
 
     return Scaffold(
       appBar: AppBar(
@@ -41,19 +543,13 @@ class _TodoAppState extends State<TodoApp> {
         ),
         flexibleSpace: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDark
-                  ? [mainBlue.shade900, Colors.black]
-                  : [mainBlue.shade300, Colors.white],
-            ),
+            gradient: LinearGradient(colors: _getGradientColors()),
           ),
         ),
         actions: [
           PopupMenuButton<TaskFilter>(
             tooltip: 'Filter tasks',
-            onSelected: (TaskFilter filter) {
-              cubit.changeFilter(filter);
-            },
+            onSelected: (TaskFilter filter) => cubit.changeFilter(filter),
             itemBuilder: (context) => const [
               PopupMenuItem(value: TaskFilter.all, child: Text('All')),
               PopupMenuItem(value: TaskFilter.pending, child: Text('Pending')),
@@ -70,7 +566,7 @@ class _TodoAppState extends State<TodoApp> {
         ],
       ),
       body: Container(
-        color: isDark ? Colors.black : Colors.grey[100],
+        color: _getBodyBackgroundColor(),
         child: Column(
           children: [
             Padding(
@@ -80,7 +576,7 @@ class _TodoAppState extends State<TodoApp> {
                 decoration: InputDecoration(
                   hintText: "Add a new task...",
                   filled: true,
-                  fillColor: isDark ? Colors.grey[850] : Colors.grey[200],
+                  fillColor: _getInputFillColor(),
                   prefixIcon: Icon(Icons.edit_note, color: mainBlue),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
@@ -109,68 +605,14 @@ class _TodoAppState extends State<TodoApp> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      FilterChip(
-                        shape: const StadiumBorder().copyWith(
-                            side: BorderSide(
-                          color: Colors.grey,
-                          width: 1,
-                        )),
-                        checkmarkColor: mainBlue,
-                        backgroundColor: isDark ? mainBlue : Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        label: const Text("All"),
-                        selected: state.filter == TaskFilter.all,
-                        onSelected: (_) => context
-                            .read<TodoCubit>()
-                            .changeFilter(TaskFilter.all),
-                        selectedColor: mainBlue.withOpacity(0.3),
-                        labelStyle: TextStyle(
-                          color:
-                              state.filter == TaskFilter.all ? mainBlue : null,
-                        ),
-                      ),
+                      _buildFilterChip(TaskFilter.all, "All",
+                          state.filter == TaskFilter.all),
                       const SizedBox(width: 8),
-                      FilterChip(
-                        shape: const StadiumBorder().copyWith(
-                            side: BorderSide(
-                          color: Colors.grey,
-                          width: 1,
-                        )),
-                        checkmarkColor: mainBlue,
-                        label: const Text("Pending"),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        selected: state.filter == TaskFilter.pending,
-                        onSelected: (_) => context
-                            .read<TodoCubit>()
-                            .changeFilter(TaskFilter.pending),
-                        selectedColor: mainBlue.withOpacity(0.3),
-                        labelStyle: TextStyle(
-                          color: state.filter == TaskFilter.pending
-                              ? mainBlue
-                              : null,
-                        ),
-                      ),
+                      _buildFilterChip(TaskFilter.pending, "Pending",
+                          state.filter == TaskFilter.pending),
                       const SizedBox(width: 8),
-                      FilterChip(
-                        checkmarkColor: mainBlue,
-                        shape: const StadiumBorder().copyWith(
-                            side: BorderSide(
-                          color: Colors.grey,
-                          width: 1,
-                        )),
-                        label: const Text("Completed"),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        selected: state.filter == TaskFilter.completed,
-                        onSelected: (_) => context
-                            .read<TodoCubit>()
-                            .changeFilter(TaskFilter.completed),
-                        selectedColor: mainBlue.withOpacity(0.3),
-                        labelStyle: TextStyle(
-                          color: state.filter == TaskFilter.completed
-                              ? mainBlue
-                              : null,
-                        ),
-                      ),
+                      _buildFilterChip(TaskFilter.completed, "Completed",
+                          state.filter == TaskFilter.completed),
                     ],
                   ),
                 );
@@ -184,13 +626,8 @@ class _TodoAppState extends State<TodoApp> {
                     return Center(
                       child: Text(
                         'No tasks yet 🎉',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onBackground
-                              .withOpacity(0.6),
-                        ),
+                        style: _emptyStateStyle(
+                            Theme.of(context).colorScheme.onBackground),
                       ),
                     );
                   }
@@ -203,19 +640,22 @@ class _TodoAppState extends State<TodoApp> {
                       final isOverdue = task.date != null &&
                           task.date!.isBefore(DateTime.now()) &&
                           !task.isDone;
+                      final onBackgroundColor =
+                          Theme.of(context).colorScheme.onBackground;
 
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                         margin: const EdgeInsets.symmetric(vertical: 6),
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[900] : Colors.white,
+                          color: _getTaskTileColor(),
                           borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Color(
+                                  0x0A000000), // Colors.black.withOpacity(0.05)
                               blurRadius: 6,
-                              offset: const Offset(0, 3),
+                              offset: Offset(0, 3),
                             ),
                           ],
                         ),
@@ -230,19 +670,7 @@ class _TodoAppState extends State<TodoApp> {
                           ),
                           title: Text(
                             task.title,
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              decoration: task.isDone
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
-                              color: task.isDone
-                                  ? Theme.of(context)
-                                      .colorScheme
-                                      .onBackground
-                                      .withOpacity(0.5)
-                                  : Theme.of(context).colorScheme.onBackground,
-                            ),
+                            style: _titleStyle(onBackgroundColor, task.isDone),
                           ),
                           subtitle: task.date != null
                               ? Row(
@@ -253,25 +681,15 @@ class _TodoAppState extends State<TodoApp> {
                                       size: 16,
                                       color: isOverdue
                                           ? Colors.redAccent
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .onBackground
-                                              .withOpacity(0.6),
+                                          : onBackgroundColor.withOpacity(0.6),
                                     ),
                                     const SizedBox(width: 4),
                                     SizedBox(
                                       width: 125,
                                       child: Text(
                                         "Due: ${DateFormat.yMMMd().format(task.date!)}",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 13,
-                                          color: isOverdue
-                                              ? Colors.redAccent
-                                              : Theme.of(context)
-                                                  .colorScheme
-                                                  .onBackground
-                                                  .withOpacity(0.6),
-                                        ),
+                                        style: _subtitleStyle(
+                                            onBackgroundColor, isOverdue),
                                       ),
                                     ),
                                   ],
@@ -301,23 +719,19 @@ class _TodoAppState extends State<TodoApp> {
                               initialDate: task.date ?? DateTime.now(),
                               firstDate: DateTime(2000),
                               lastDate: DateTime(2100),
-                              builder: (context, child) {
-                                // Apply blue theme to date picker
-                                return Theme(
-                                  data: Theme.of(context).copyWith(
-                                    colorScheme: ColorScheme.light(
-                                      primary: mainBlue,
-                                      onPrimary: Colors.white,
-                                      onSurface:
-                                          isDark ? Colors.white : Colors.black,
-                                    ),
-                                    dialogBackgroundColor: isDark
-                                        ? Colors.grey[900]
-                                        : Colors.white,
+                              builder: (context, child) => Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: Colors.blue,
+                                    onPrimary: Colors.white,
+                                  ).copyWith(
+                                    onSurface:
+                                        isDark ? Colors.white : Colors.black,
                                   ),
-                                  child: child!,
-                                );
-                              },
+                                  dialogBackgroundColor: _getTaskTileColor(),
+                                ),
+                                child: child!,
+                              ),
                             );
                             if (pickedDate != null) {
                               cubit.updateDate(originalIndex, pickedDate);

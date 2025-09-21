@@ -10,19 +10,19 @@ class TodoState extends Equatable {
 
   const TodoState({
     this.tasks = const [],
-    this.filter = TaskFilter.all,
-    this.isLoading=false,
+    this.filter = TaskFilter.pending,
+    this.isLoading = false,
     this.error,
   });
 
-  List<Task> get filteredTasks{
-    switch(filter){
+  List<Task> get filteredTasks {
+    switch (filter) {
       case TaskFilter.completed:
-        return  tasks.where((e)=> e.isDone).toList();
+        return tasks.where((e) => e.isDone).toList();
       case TaskFilter.pending:
-        return tasks.where((e)=> !e.isDone).toList();
+        return tasks.where((e) => !e.isDone).toList();
       default:
-        return tasks;    
+        return tasks;
     }
   }
 
@@ -35,7 +35,7 @@ class TodoState extends Equatable {
     return TodoState(
       tasks: tasks ?? this.tasks,
       filter: filter ?? this.filter,
-      isLoading: isLoading?? this.isLoading,
+      isLoading: isLoading ?? this.isLoading,
       error: error,
     );
   }
